@@ -1,25 +1,46 @@
 /* Styles from Twitter Bootstrap theme */
 body {
-  padding-top: 70px;
-  padding-bottom: 30px;
+    padding-top: 70px;
+    padding-bottom: 30px;
+}
+
+.skip-link {
+    text-align: center;
+}
+
+/* Add a focus state for .sr-only for skip links */
+.sr-only:active,
+.sr-only:focus {
+	position: static;
+	width: auto;
+	height: auto;
+	margin: 0;
+	overflow: visible;
+	clip: auto
+}
+
+/* Only cancel outline on main div since user doesn't need to see :focus */
+#main[tabindex="-1"]:focus {
+    outline: 0;
 }
 
 .theme-dropdown .dropdown-menu {
-  position: static;
-  display: block;
-  margin-bottom: 20px;
+    position: static;
+    display: block;
+    margin-bottom: 20px;
 }
 
 .theme-showcase > p > .btn {
-  margin: 5px 0;
+    margin: 5px 0;
 }
 
 .theme-showcase .navbar .container {
-  width: auto;
+    width: auto;
 }
 
 /* NewsForBetty */
-body, .fontMed {
+body,
+.fontMed {
     font-size: 2em;
 }
 .fontLarge {
@@ -34,11 +55,13 @@ body, .fontMed {
 .fontSmall [role=main] .btn {
     font-size: 0.9em;
 }
-.navbar-brand, .navbar-right {
+.navbar-brand,
+.navbar-right {
     height: 64px;
     padding: 8px 16px;
 }
-.navbar-brand img, .navbar-right img {
+.navbar-brand img,
+.navbar-right img {
     height: 48px;
 }
 .navbar-right img {
@@ -47,7 +70,8 @@ body, .fontMed {
 .news-item {
     clear: both;
 }
-#news img[border="0"], #news br {
+#news img[border="0"],
+#news br {
     display: none;
 }
 #news .img-thumbnail {
@@ -57,20 +81,57 @@ body, .fontMed {
 .read-more {
     text-align: right;
 }
-
-@media (min-width: 560px) {
-  .navbar-nav {
-    margin: 0;
-  }
-  .navbar-right > li {
-    float: left;
-  }
-  .navbar-right {
-    float: right;
-  }
+#sources button,
+#categories button {
+    margin-bottom: 8px;
+    margin-right: 8px;
 }
-@media (max-width: 560px) {
+#toggleContrast {
+  margin-left: 8px;
+}
+
+/* High contrast styles */
+.high-contrast,
+.high-contrast .news-item {
+    color: #FFF;
+    background-color: #111;
+}
+.high-contrast .panel-default>.panel-heading {
+    color: #FFF;
+    background-color: #2A2A2A;
+    background-image: linear-gradient(to bottom,#494949 0,#2A2A2A 100%);
+}
+.high-contrast .btn-primary {
+    background-color: #CC8548;
+    background-image: linear-gradient(to bottom,#D9A577 0,#CC8548 100%);
+    border-color: #DBAA7F;
+    color: #111;
+}
+
+.logo-small {
+    display: none;
+}
+
+/* Media queries */
+@media (max-width: 640px) {
+    .logo-large {
+        display: none;
+    }
+    .logo-small {
+        display: block;
+    }
+}
+    .navbar-nav {
+        margin: 0;
+    }
+    .navbar-right > li {
+        float: left;
+    }
     .navbar-right {
+        float: right;
+    }
+@media (max-width: 388px) {
+    .logo-small {
         display: none;
     }
 }

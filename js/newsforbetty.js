@@ -1,99 +1,153 @@
 $(document).ready(function () {
-    //$("p").text("The DOM is now loaded and can be manipulated.");
+    'use strict';
     
-    // WORKS
-    function showItems(itemList, source) {
-        $('#news').empty().append('<h1>News from ' + sources[source].name + '</h1>');
-        $.each(itemList, function(index, item) {
-            var img = (!!item.content && !!item.content.url) ? '<img src="' + item.content.url + '" alt="Photo to illustrate this news story." class="img-thumbnail">' : '';
-            img = (!!item.thumbnail) ? '<img src="' + item.thumbnail[0].url + '" alt="Photo to illustrate this news story." class="img-thumbnail">' : img;
-            var desc = ($.isArray(item.description)) ? item.description[0] : item.description;
-            var extLink = ($.isArray(item.link)) ? item.link[0].href : item.link;
-            if (!!item.title) {
-                $('#news').append('<div class="news-item panel panel-default"><div class="panel-heading"><h2>' + item.title + '</h2></div><div class="panel-body">' + img + '<p>' + item.description + '</p><div><a href="' + extLink + '" class="btn btn-primary read-more">Read more</a></div></div></div>');
-                console.log(index + ": " + item.title);
+    window.onhashchange = function() {
+        // Get URL hash item and validate it
+        var id = location.hash.substring(1);
+        if (!(/^[A-z0-9_-]+$/.test(id))) {
+            return;
+        }
+        
+        // Skip link focus fix for browsers that do not shift focus when anchor links are clicked.
+        var element = document.getElementById(id);
+        if (element && element !== document.activeElement) {
+            if (!(/^(?:a|select|input|button|textarea)$/i.test(element.tagName))) {
+                element.tabIndex = -1;
             }
+            element.focus();
+        }
+    };
+    
+    function showItems(itemList, sourceObj, cat) {
+        $('#news').hide();
+        var catName = (!!cat) ? ': ' + sourceObj.categories[cat].name : '';
+        $('#news').empty().append('<h1>' + sourceObj.name + catName + '</h1>');
+        var tmpTitle;
+        $.each(itemList, function(index, item) {
+            if (!!item.title && item.title !== tmpTitle) { // Ignore duplicate news items
+                var img = '',
+                    desc = '',
+                    imgDesc = '',
+                    extLink = '';
+                    
+                if (!!item.content && !!item.content.url) {
+                    img = '<img src="' + item.content.url + '" alt="Photo to illustrate this news story." class="img-thumbnail">';
+                } else if ($.isArray(item.thumbnail)) {
+                    img = '<img src="' + item.thumbnail[0].url + '" alt="Photo to illustrate this news story." class="img-thumbnail">';
+                }
+                
+                if ($.isArray(item.description)) {
+                    desc = '<p>' + item.description[0] + '</p>';
+                } else if (!!item.description) {
+                    desc = '<p>' + item.description + '</p>';
+                }
+                
+                if ($.isArray(item.description) && !!item.description[1]) {
+                    imgDesc = '<p>Photo: ' + item.description[1] + '</p>';
+                }
+                
+                if ($.isArray(item.link)) {
+                    extLink = '<div><a href="' + item.link[0].href + '" class="btn btn-primary read-more">Read more <span class="sr-only">about ' + item.title + '</span></a></div>';
+                } else if (!!item.link) {
+                    extLink = '<div><a href="' + item.link + '" class="btn btn-primary read-more">Read more <span class="sr-only">about ' + item.title + '</span></a></div>';
+                }
+                
+                $('#news').append('<div class="news-item panel panel-default"><div class="panel-heading"><h2>' + item.title + '</h2></div><div class="panel-body">' + img + desc + imgDesc + extLink + '</div></div>');
+            }
+            tmpTitle = item.title;
         });
+        $('#news').fadeIn('slow');
     }
 
-    
-    var sources = {
-        'nytusa': {
-            'name': 'New York Times (U.S.)',
-            'url': "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20rss%20where%20url%3D%22http%3A%2F%2Frss.nytimes.com%2Fservices%2Fxml%2Frss%2Fnyt%2FHomePage.xml%22&format=json&callback="
-            },
-        'nytint': {
-            'name': 'New York Times (International)',
-            'url':             "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20rss%20where%20url%3D%22http%3A%2F%2Frss.nytimes.com%2Fservices%2Fxml%2Frss%2Fnyt%2FInternationalHome.xml%22&format=json&callback="
-        }, 
-        'phillydotcom': {
-          'name': 'Philly.com',
-          'url':"https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20rss%20where%20url%3D%22http%3A%2F%2Fwww.philly.com/philly_news.rss%22&format=json&callback="
-        },
-        'wapo' : {
-          'name': "Washington Post",
-          'url' : "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20rss%20where%20url%3D%22http%3A%2F%2Fwww.washingtonpost.com/wp-srv/topnews/rssheadlines.xml%22&format=json&callback="
-        },
-        'wapolocal' : {
-          'name': 'WashPost Local',
-          'url':"https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20rss%20where%20url%3D%22http%3A%2F%2Ffeeds.washingtonpost.com/rss/local%22&format=json&callback="
-        }
+    function showSources() {
+        $.each(sources, function(index, item) {
+            $('#sources').append('<button type="button" class="btn btn-lg btn-primary" aria-controls="news" data-source="' + index  + '"> ' + item.name +'</button>');
+        });
     }
     
-    function showSources(){
-      $.each(sources, function(index,item){
-        $('#sources').append('<button type="button" class="btn btn-lg btn-primary" data-source="' + index  + '"> ' + item.name +'</button> ');
-      });
+    function showCats(source) {
+        $('#categories').hide();
+        var cats = sources[source].categories;
+        $.each(cats, function(index, item) {
+            $('#categories').append('<button type="button" class="btn btn-lg btn-success" aria-controls="news" data-source="' + source + '-' + index + '">' + item.name + '</button>');
+        });
+        $('#categories').append('<hr>').fadeIn('slow');
     }
-    
-    
-    function getNews(source) {
-        $.ajax({url: sources[source].url,
+
+    function getNews(source, cat) {
+        showWaiting('#news');
+        var url = (!!cat) ? sources[source].categories[cat].url : sources[source].url;
+        $.ajax({
+            url: url,
             success: function(data) {
-                console.log(source);
-                //debugger;
-                showItems(data.query.results.item, source);
+                showItems(data.query.results.item, sources[source], cat);
             },
             error: function(e) {
-                alert("Error: " + e);
+                alert('Error: ' + e);
             },
-            dataType: "json",
-            type: "get"
+            dataType: 'json',
+            type: 'get'
         })
     }
-    var source = 'nytint';
-    
+
     function showWaiting(el) {
         $(el).empty().append('<p>Please wait...</p><div class="progress"><div class="progress-bar progress-bar-warning progress-bar-striped active" style="width: 100%"></div></div>');
     }
 
-        $('#sources').on("click","[data-source]", function() {
-            //$('#news').text('Please wait...');
-            showWaiting('#news');
-            var source = $(this).data('source');
+    $('#sources').on('click', '[data-source]', function() {
+        $('#categories').empty();
+        $('#news').empty();
+        var source = $(this).data('source');
+        if (!!sources[source].categories) {
+            showCats(source);
+        } else {
             getNews(source);
-        });
+        }
+    });
     
+    $('#categories').on('click', '[data-source]', function() {
+        $('#news').empty();
+        var dataSource = $(this).data('source').split('-');
+        getNews(dataSource[0], dataSource[1]);
+    });
+
     function setFontSize(fontSize) {
-        document.body.className = fontSize;
+      $('body').removeClass('fontSmall fontMed fontLarge');
+      $('body').addClass(fontSize);
         if (window.localStorage) {
             window.localStorage['fontSize'] = fontSize;
         }
     }
-    
-    document.getElementById('fontDecrease').onclick = function() {
-        var fontSize = (document.body.className === 'fontMed' || document.body.className === 'fontSmall') ? 'fontSmall' : 'fontMed';
+
+    $('#fontDecrease').on('click', function() {
+        var fontSize = ($('body').hasClass('fontMed') || $('body').hasClass('fontSmall')) ? 'fontSmall' : 'fontMed';
         setFontSize(fontSize);
-    };
-    document.getElementById('fontIncrease').onclick = function() {
-        var fontSize = (document.body.className === 'fontMed' || document.body.className === 'fontLarge') ? 'fontLarge' : 'fontMed';
+    });
+
+    $('#fontIncrease').on('click', function() {
+        var fontSize = ($('body').hasClass('fontMed') || $('body').hasClass('fontLarge')) ? 'fontLarge' : 'fontMed';
         setFontSize(fontSize);
-    };
-    
+    });
+
     if (window.localStorage && window.localStorage['fontSize']) {
-        document.body.className = window.localStorage['fontSize'];
+      $('body').addClass(window.localStorage['fontSize']);
     }
-    
+
+    function toggleContrast() {
+        $('body').toggleClass('high-contrast');
+        if (window.localStorage) {
+            window.localStorage['contrast'] = $('body').hasClass('high-contrast') ? 'high-contrast' : '';
+        }
+    }
+
+    $('#toggleContrast').on('click', function() {
+      toggleContrast();
+    });
+
+    if (window.localStorage && window.localStorage['contrast']) {
+        $('body').addClass(window.localStorage['contrast']);
+    }
+
     function showGreeting() {
         var greeting = 'Hello.';
         var today = new Date();
@@ -105,11 +159,11 @@ $(document).ready(function () {
         } else if (hours >= 18 && hours < 23) {
             greeting = 'Good evening.';
         }
-        document.getElementById('greeting').innerHTML = greeting;
+
+        $('#greeting').append(greeting);
     }
-    
-    
+
     showGreeting();
-    
+
     showSources();
 });
